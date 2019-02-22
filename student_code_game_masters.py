@@ -34,7 +34,28 @@ class TowerOfHanoiGame(GameMaster):
             A Tuple of Tuples that represent the game state
         """
         ### student code goes here
-        pass
+
+
+        output = [[], [], []]
+
+        for fact in self.kb.facts:
+            if fact.statement.predicate == 'on':
+                disk = str(fact.statement.terms[0])
+                disk_num = int(disk[-1])
+                peg = str(fact.statement.terms[1])
+                peg_num = int(peg[-1])
+
+                output[peg_num - 1].insert(0, disk_num)
+
+        for index, list in enumerate(output):
+            list.sort()
+            output[index] = tuple(list)
+
+        result = tuple(output)
+        return result
+        
+
+
 
     def makeMove(self, movable_statement):
         """
@@ -52,8 +73,45 @@ class TowerOfHanoiGame(GameMaster):
         Returns:
             None
         """
+
         ### Student code goes here
-        pass
+        
+        disk = str(movable_statement.terms[0])
+        peg1 = str(movable_statement.terms[1])
+        peg2 = str(movable_statement.terms[2])
+
+        peg1_num = int(peg1[-1])
+        peg2_num = int(peg2[-1])
+
+        game_state = self.getGameState()
+
+        # target peg's change
+        if len(game_state[peg2_num - 1]) > 0:
+            fact = Fact(['top', 'disk' + str(game_state[peg2_num - 1][0]), str(peg2)])
+            self.kb.kb_retract(fact)
+        else:
+            fact = Fact(['empty', str(peg2)])
+            self.kb.kb_retract(fact)
+
+        # after moving disk from peg1 to peg2
+        fact_retract1 = Fact(['on', str(disk), str(peg1)])
+        fact_retract2 = Fact(['top', str(disk), str(peg1)])
+        self.kb.kb_retract(fact_retract1)
+        self.kb.kb_retract(fact_retract2)
+
+        fact_add1 = Fact(['on', str(disk), str(peg2)])
+        fact_add2 = Fact(['top', str(disk), str(peg2)])
+        self.kb.kb_add(fact_add1)
+        self.kb.kb_add(fact_add2)
+
+        # after miving, the original peg's change
+        if len(game_state[peg1_num - 1]) > 1:
+            fact = Fact(['top', 'disk' + str(game_state[peg1_num - 1][1]), str(peg1)])
+            self.kb.kb_add(fact)
+        else:
+            fact = Fact(['empty', str(peg1)])
+            self.kb.kb_add(fact)
+
 
     def reverseMove(self, movable_statement):
         """
@@ -100,7 +158,32 @@ class Puzzle8Game(GameMaster):
             A Tuple of Tuples that represent the game state
         """
         ### Student code goes here
-        pass
+        output = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+
+        for fact in self.kb.facts:
+            if fact.statement.predicate == 'on' and str(fact.statement.terms[0]) != 'empty':
+                x = str(fact.statement.terms[1])
+                y = str(fact.statement.terms[2])
+                tile = str(fact.statement.terms[0])
+                x_num = int(x[-1])
+                y_num = int(y[-1])
+                tile_num = int(tile[-1])
+                output[y_num - 1][x_num-1] = tile_num
+            
+            if fact.statement.predicate == 'on' and str(fact.statement.terms[0]) == 'empty':
+                x = str(fact.statement.terms[1])
+                y = str(fact.statement.terms[2])
+                x_num = int(x[-1])
+                y_num = int(y[-1])
+                output[y_num - 1][x_num-1] = -1
+
+        for index, list in enumerate(output):
+            output[index] = tuple(list)
+        
+        result = tuple(output)
+
+        return result
+        
 
     def makeMove(self, movable_statement):
         """
@@ -119,7 +202,26 @@ class Puzzle8Game(GameMaster):
             None
         """
         ### Student code goes here
-        pass
+
+
+        tile = str(movable_statement.terms[0])
+        x1 = str(movable_statement.terms[1])
+        y1 = str(movable_statement.terms[2])
+        x2 = str(movable_statement.terms[3])
+        y2 = str(movable_statement.terms[4])
+
+        # retract old fact
+        fact_retract1 = Fact(['on', str(tile), str(x1), str(y1)])
+        fact_retract2 = Fact(['on', 'empty', str(x2), str(y2)])
+        self.kb.kb_retract(fact_retract1)
+        self.kb.kb_retract(fact_retract2)
+
+        # add new fact
+        fact_add1 = Fact(['on', 'empty', str(x1), str(y1)])
+        fact_add2 = Fact(['on', str(tile), str(x2), str(y2)])
+        self.kb.kb_add(fact_add1)
+        self.kb.kb_add(fact_add2)
+
 
     def reverseMove(self, movable_statement):
         """
